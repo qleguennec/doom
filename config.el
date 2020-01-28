@@ -26,7 +26,7 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. These are the defaults.
-(setq doom-theme 'doom-molokai)
+(setq doom-theme 'doom-horizon)
 
 ;; If you intend to use org, it is recommended you change this!
 (setq org-directory "~/org/")
@@ -74,6 +74,11 @@
 
 (use-package aggressive-indent
   :hook (prog-mode . global-aggressive-indent-mode))
+
+(use-package git-auto-commit-mode
+  :config
+  (setq gac-automatically-push-p t
+        gac-automatically-add-new-files-p t))
 
 ;; Disable flycheck for emacs-lisp
 (add-hook! emacs-lisp-mode

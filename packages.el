@@ -53,4 +53,4 @@
 (package! lispyville)
 
 ;; org things
-(package! org-drill)
+(package! git-auto-commit-mode)
