@@ -238,3 +238,10 @@
                       (recenter))
  :nvi "<down>" (lambda! (evil-scroll-down (window-quarter-height))
                         (recenter)))
+
+(setq maximum-scroll-margin 0.5
+      scroll-margin 99999
+      scroll-preserve-screen-position t
+      scroll-conservatively 0)
+
+(setq evil-escape-key-sequence nil)
