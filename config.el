@@ -53,6 +53,10 @@
 ;;
 ;;
 ;;
+;;
+
+(setq tramp-copy-size-limit (* 1024 1024 1024 1024)
+      tramp-inline-compress-start-size (* 1024 1024 1024 1024))
 
 (remove-hook! prog-mode vi-tilde-fringe-mode)
 
@@ -233,15 +237,80 @@
 
 (map! :leader :n "h." #'helpful-at-point)
 
-(map!
- :nvi "<up>" (lambda! (evil-scroll-up (window-quarter-height))
-                      (recenter))
- :nvi "<down>" (lambda! (evil-scroll-down (window-quarter-height))
-                        (recenter)))
-
-(setq maximum-scroll-margin 0.5
-      scroll-margin 99999
-      scroll-preserve-screen-position t
-      scroll-conservatively 0)
+(setq scroll-conservatively 0
+      scroll-preserve-screen-position t)
 
 (setq evil-escape-key-sequence nil)
+
+(use-package lispy
+  :hook ((common-lisp-mode . lispy-mode)
+         (emacs-lisp-mode . lispy-mode)
+         (scheme-mode . lispy-mode)
+         (racket-mode . lispy-mode)
+         (hy-mode . lispy-mode)
+         (lfe-mode . lispy-mode)
+         (dune-mode . lispy-mode)
+         (clojure-mode . lispy-mode))
+  :config
+  (setq lispy-close-quotes-at-end-p t)
+  (add-hook 'lispy-mode-hook #'turn-off-smartparens-mode))
+
+(use-package! lispyville
+  :when (featurep! :editor evil)
+  :hook (lispy-mode . lispyville-mode)
+  :config
+  (lispyville-set-key-theme
+   '((operators normal)
+     c-w
+     (prettify insert)
+     (atom-movement normal visual)
+     slurp/barf-lispy
+     additional
+     additional-insert)))
+
+(after! projectile
+  (pushnew! projectile-project-root-files "project.clj" "build.boot" "deps.edn")
+  (add-to-list 'projectile-globally-ignored-directories "webapp/src/styles")
+  (add-to-list 'projectile-globally-ignored-directories "src/styles")
+  (add-to-list 'projectile-globally-ignored-directories "webapp/node_modules")
+  (add-to-list 'projectile-globally-ignored-directories "src/dist")
+  (add-to-list 'projectile-globally-ignored-directories "dist"))
+
+(advice-add 'evil-window-up
+            :after
+            (lambda (arg)
+              (when (string-equal " *NeoTree*" (buffer-name (current-buffer)))
+                (evil-window-right 1))))
+
+(after! aggressive-indent
+  (add-to-list 'aggressive-indent-excluded-modes 'typescript-mode))
+
+(setq-hook! typescript-mode
+  typescript-indent-level 2)
+
+(use-package prettier-js
+  :commands prettier-js-mode
+  :init
+  (add-hook! (typescript-mode web-mode scss-mode) #'prettier-js-mode)
+  :config
+  (setq prettier-js-command "prettier_d"))
+
+(after! prettier-js
+  (add-hook 'before-save-hook
+            (lambda!
+             (when prettier-js-mode
+               (prettier-js)))))
+
+(setq-hook! web-mode
+  web-mode-markup-indent-offset 2)
+
+(advice-remove 'evil-delete-backward-char-and-join #'+evil-delete-region-if-mark-a)
+
+(after! company
+  (setq company-idle-delay 0
+        company-echo-delay 0
+        company-tooltip-idle-delay 0)
+
+  (define-key! company-active-map
+    "RET"       #'company-complete-selection
+    [return]    #'company-complete-selection))

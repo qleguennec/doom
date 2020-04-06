@@ -20,12 +20,10 @@
        ;;japanese
 
        :completion
-       (company
-        +childframe)                    ; the ultimate code completion backend
+       company                    ; the ultimate code completion backend
        ;;helm              ; the *other* search engine for love and life
        ;;ido               ; the other *other* search engine...
        (ivy
-        ;; +childframe
         +prescient
         +fuzzy
         +icons)
@@ -68,8 +66,9 @@
        multiple-cursors            ; editing in many places at once
        ;; objed             ; text object editing for the innocent
        ;; ^
-       ;;parinfer          ; turn lisp into python, sort of
-       rotate-text               ; cycle region at point between text candidates
+       ;; parinfer          ; turn lisp into python, sort of
+       ;; rotate-text
+                                        ; cycle region at point between text candidates
        snippets                  ; my elves. They type so I don't have to
        ;;word-wrap         ; soft wrapping with language-aware indent
 
@@ -81,12 +80,11 @@
        vc                         ; version-control and Emacs, sitting in a tree
 
        :term
-       ;; eshell                   ; a consistent, cross-platform shell (WIP)
+       eshell                   ; a consistent, cross-platform shell (WIP)
        ;;shell             ; a terminal REPL for Emacs
        ;; term              ; terminals in Emacs
-       vterm
+       ;; vterm
                                         ; another terminals in Emacs
-
 
        :checkers
        syntax              ; tasing you for every semicolon you forget
@@ -139,7 +137,9 @@
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ;
        ;;(java +meghanada) ; the poster child for carpal tunnel syndrome
-       javascript     ; all(hope(abandon(ye(who(enter(here))))))
+       (javascript
+        +typescript=mode
+        +tide)        ; all(hope(abandon(ye(who(enter(here))))))
        ;;julia             ; a better, faster MATLAB
        ;;kotlin            ; a better, slicker Java(Script)
        latex          ; writing papers in Emacs has never been so fun

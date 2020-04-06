@@ -54,3 +54,8 @@
 
 ;; org things
 (package! git-auto-commit-mode)
+
+(unpin! doom-themes)
+(unpin! lispy)
+
+(package! prettier-js)
