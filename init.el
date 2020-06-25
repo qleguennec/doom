@@ -47,29 +47,32 @@
         +all                      ; catch all popups that start with an asterix
         +defaults)                ; default popup rules
        pretty-code                ; replace bits of code with pretty symbols
-       tabs                       ; an tab bar for Emacs
-       treemacs                   ; a project drawer, like neotree but cooler
+       ;; tabs                       ; an tab bar for Emacs
+       ;; treemacs
+                                        ; a project drawer, like neotree but cooler
        ;;unicode           ; extended unicode support for various languages
-       vc-gutter                        ; vcs diff in the fringe
+                                        ;vc-gutter                        ; vcs diff in the fringe
        vi-tilde-fringe                  ; fringe tildes to mark beyond EOB
        window-select                    ; visually switch windows
-       ;; workspaces        ; tab emulation, persistence & separate workspaces
+       workspaces        ; tab emulation, persistence & separate workspaces
        zen                              ; distraction-free coding or writing
 
        :editor
        (evil +everywhere)               ; come to the dark side, we have cookies
        file-templates                   ; auto-snippets for empty files
        fold                             ; (nigh) universal code folding
-       (format +onsave)                 ; automated prettiness
+       format                 ; automated prettiness
        ;;god               ; run Emacs commands without modifier keys
        lispy                       ; vim for lisp, for people who don't like vim
-       multiple-cursors            ; editing in many places at once
+       ;; multiple-cursors
+                                        ; editing in many places at once
        ;; objed             ; text object editing for the innocent
        ;; ^
        ;; parinfer          ; turn lisp into python, sort of
-       ;; rotate-text
-                                        ; cycle region at point between text candidates
-       snippets                  ; my elves. They type so I don't have to
+       ;; ;; rotate-text
+       ;;                                  ; cycle region at point between text candidates
+       snippets
+                                        ; my elves. They type so I don't have to
        ;;word-wrap         ; soft wrapping with language-aware indent
 
        :emacs
@@ -92,7 +95,7 @@
        ;;grammar           ; tasing grammar mistake every you make
 
        :tools
-       ;;ansible
+       ;;ansibly
        ;;debugger          ; FIXME stepping through code, to help you add bugs
        ;;direnv
        ;;docker
@@ -152,14 +155,14 @@
        ;;nix               ; I hereby declare "nix geht mehr!"
        ocaml                            ; an objective camel
        (org                             ; organize your plain life in plain text
-        +journal
-        ;; +dragndrop       ; drag & drop files/images into org buffers
-        ;; ;;+hugo            ; use Emacs for hugo blogging
-        ;; ;;+jupyter        ; ipython/jupyter support for babel
-        ;; ;;+pandoc          ; export-with-pandoc support
-        ;; ;;+pomodoro        ; be fruitful with the tomato technique
-        ;; +present
-        )            ; using org-mode for presentations
+        +journal)
+       ;; +dragndrop       ; drag & drop files/images into org buffers
+       ;; ;;+hugo            ; use Emacs for hugo blogging
+       ;; ;;+jupyter        ; ipython/jupyter support for babel
+       ;; ;;+pandoc          ; export-with-pandoc support
+       ;; ;;+pomodoro        ; be fruitful with the tomato technique
+       ;; +present
+                                        ; using org-mode for presentations
        ;;perl              ; write code no one else can comprehend
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
@@ -180,7 +183,7 @@
        web                              ; the tubes
 
        :email
-       mu4e
+       ;;mu4e
        ;;notmuch
        ;;(wanderlust +gmail)
 

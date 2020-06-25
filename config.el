@@ -19,14 +19,14 @@
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
 ;; test
-(setq doom-font (font-spec :family "Fira Code" :size 20)
-      doom-big-font (font-spec :family "Fira Code" :size 36)
-      doom-variable-pitch-font (font-spec :family "Overpass" :size 22))
+(setq doom-font (font-spec :family "mononoki" :size 15)
+      doom-big-font (font-spec :family "mononoki" :size 36)
+      doom-variable-pitch-font (font-spec :family "Overpass" :size 12))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. These are the defaults.
-(setq doom-theme 'doom-horizon)
+(setq doom-theme 'doom-material)
 
 ;; If you intend to use org, it is recommended you change this!
 (setq org-directory "~/org/")
@@ -55,9 +55,6 @@
 ;;
 ;;
 
-(setq tramp-copy-size-limit (* 1024 1024 1024 1024)
-      tramp-inline-compress-start-size (* 1024 1024 1024 1024))
-
 (remove-hook! prog-mode vi-tilde-fringe-mode)
 
 (after! evil-collection
@@ -70,14 +67,8 @@
 (use-package hungry-delete
   :hook (prog-mode . global-hungry-delete-mode))
 
-(add-hook! prog-mode
-           #'electric-pair-mode
-           #'electric-indent-mode
-           #'electric-layout-mode
-           #'electric-quote-mode)
-
 (use-package aggressive-indent
-  :hook (prog-mode . global-aggressive-indent-mode))
+  :hook ((clojure-mode clojurescript-mode emacs-lisp-mode) . aggressive-indent-mode))
 
 (use-package git-auto-commit-mode
   :config
@@ -89,118 +80,27 @@
   (after! flycheck
     (flycheck-mode -1)))
 
-(after! lispy
-  (lispyville-set-key-theme '(slurp/barf-lispy
-                              text-objects
-                              lispyville-prettify
-                              escape
-                              additional-movement
-                              commentary
-                              mark-toggle)))
-
 (after! centaur-tabs
-  (map! (:map centaur-tabs-mode-map
-          "C-h" #'centaur-tabs-backward
-          "C-l" #'centaur-tabs-forward)))
+  (setq centaur-tabs-cycle-scope 'tabs)
+  (map! :map centaur-tabs-mode-map
+        :n "M-h" #'centaur-tabs-backward
+        :n "M-l" #'centaur-tabs-forward)
+  (centaur-tabs-group-by-projectile-project))
 
 (after! neotree
   (setq neo-autorefresh t))
 
-(after! org
-  (defun org-journal-find-location ()
-    ;; Open today's journal, but specify a non-nil prefix argument in order to
-    ;; inhibit inserting the heading; org-capture will insert the heading.
-    (org-journal-new-entry t)
-    ;; Position point on the journal's top-level heading so that org-capture
-    ;; will add the new entry as a child entry.
-    (goto-char (point-min)))
-
-  (setq org-journal-file-type 'daily
-        org-journal-enable-agenda-integration t)
-
-  (setq org-default-notes-file
-        (expand-file-name +org-capture-notes-file org-directory)
-        org-capture-templates
-        '(("t" "Personal todo" entry
-           (file+headline +org-capture-todo-file "Inbox")
-           "* [ ] %?\n%i\n" :prepend t)
-          ("n" "Personal notes" entry
-           (file+headline +org-capture-notes-file "Inbox")
-           "* %u %?\n%i\n%a" :prepend t)
-          ("j" "Journal entry" entry #'org-journal-find-location
-           "* %(format-time-string org-journal-time-format)\n%i%?")
-
-          ;; Will use {project-root}/{todo,notes,changelog}.org, unless a
-          ;; {todo,notes,changelog}.org file is found in a parent directory.
-          ;; Uses the basename from `+org-capture-todo-file',
-          ;; `+org-capture-changelog-file' and `+org-capture-notes-file'.
-          ("p" "Templates for projects")
-          ("pt" "Project-local todo" entry ; {project-root}/todo.org
-           (file+headline +org-capture-project-todo-file "Inbox")
-           "* TODO %?\n%i\n%a" :prepend t)
-          ("pn" "Project-local notes" entry ; {project-root}/notes.org
-           (file+headline +org-capture-project-notes-file "Inbox")
-           "* %U %?\n%i\n%a" :prepend t)
-          ("pc" "Project-local changelog" entry ; {project-root}/changelog.org
-           (file+headline +org-capture-project-changelog-file "Unreleased")
-           "* %U %?\n%i\n%a" :prepend t)
-
-          ;; Will use {org-directory}/{+org-capture-projects-file} and store
-          ;; these under {ProjectName}/{Tasks,Notes,Changelog} headings. They
-          ;; support `:parents' to specify what headings to put them under, e.g.
-          ;; :parents ("Projects")
-          ("o" "Centralized templates for projects")
-          ("ot" "Project todo" entry
-           #'+org-capture-central-project-todo-file
-           "* TODO %?\n %i\n %a"
-           :heading "Tasks"
-           :prepend nil)
-          ("on" "Project notes" entry
-           #'+org-capture-central-project-notes-file
-           "* %U %?\n %i\n %a"
-           :heading "Notes"
-           :prepend t)
-          ("oc" "Project changelog" entry
-           #'+org-capture-central-project-changelog-file
-           "* %U %?\n %i\n %a"
-           :heading "Changelog"
-           :prepend t)))
-
-  (setq org-agenda-span 14
-        org-agenda-start-on-weekday nil
-        org-agenda-start-day "0d")
-
-  (setq org-ellipsis " ▾ "
-        org-bullets-bullet-list '("◉" "○" "✸" "✿" "✤"))
-
-  (appendq! +pretty-code-symbols
-            '(:checkbox   "☐"
-                          :pending    "◼"
-                          :checkedbox "☑"
-                          :results "🠶"
-                          :begin_quote "❮"
-                          :end_quote "❯"
-                          :em_dash "—"))
-
-  (set-pretty-symbols! 'org-mode
-    :merge t
-    :checkbox   "[ ]"
-    :pending    "[-]"
-    :checkedbox "[X]"
-    :results "#+RESULTS:"
-    :begin_quote "#+BEGIN_QUOTE"
-    :end_quote "#+END_QUOTE"
-    :em_dash "---"))
-
-;; (add-hook! window-setup #'doom-load-session)
-;; (add-hook! kill-emacs #'doom-save-session)
-
-(defun window-quarter-height ()
-  (max 1 (/ (1- (window-height (selected-window))) 4)))
+(add-hook! window-setup #'doom/quickload-session)
+(add-hook! kill-emacs #'doom/quicksave-session)
 
 (after! ivy
-  (map! :n "?" #'+ivy/project-search
-        :n "/" #'counsel-grep-or-swiper))
+  (map! :vn "?" #'+ivy/project-search
+        :vn "/" #'swiper
+        :vn "*" #'swiper-thing-at-point))
+
+
+(s-split " " "hello hello")
+(format ":%s %s" "hello" "hello")
 
 (after! window-select
   (setq aw-keys '(?a ?s ?d ?f ?h ?j ?k ?l)
@@ -242,48 +142,61 @@
 
 (setq evil-escape-key-sequence nil)
 
-(use-package lispy
-  :hook ((common-lisp-mode . lispy-mode)
-         (emacs-lisp-mode . lispy-mode)
-         (scheme-mode . lispy-mode)
-         (racket-mode . lispy-mode)
-         (hy-mode . lispy-mode)
-         (lfe-mode . lispy-mode)
-         (dune-mode . lispy-mode)
-         (clojure-mode . lispy-mode))
-  :config
-  (setq lispy-close-quotes-at-end-p t)
-  (add-hook 'lispy-mode-hook #'turn-off-smartparens-mode))
+(defun recenter-and-blink (&rest _ignore)
+  (doom-recenter-a)
+  (+nav-flash-blink-cursor))
 
-(use-package! lispyville
-  :when (featurep! :editor evil)
-  :hook (lispy-mode . lispyville-mode)
+(advice-add #'+lookup/definition :after #'recenter-and-blink)
+
+(defun join-lines-after-delete (&rest _ignore)
+  (interactive)
+  (delete-blank-lines))
+
+(after! lispy
   :config
-  (lispyville-set-key-theme
-   '((operators normal)
-     c-w
-     (prettify insert)
-     (atom-movement normal visual)
-     slurp/barf-lispy
-     additional
-     additional-insert)))
+  (advice-add #'lispy-up :after #'doom-recenter-a)
+  (advice-add #'lispy-down :after #'doom-recenter-a)
+  (advice-add #'lispy-move-down :after #'doom-recenter-a)
+  (advice-add #'lispy-move-up :after #'doom-recenter-a)
+
+  (setq lispy-eval-display-style 'overlay)
+  (map! :map lispy-mode-map
+        :i "[" #'lispy-brackets
+        :i "{" #'lispy-braces))
+
+;; (after! lispyville
+;;   :config
+;;   (add-hook 'lispyville-delete #'join-lines-after-delete)
+;;   (add-hook 'lispyville-delete-whole-line #'join-lines-after-delete)
+;;   (add-hook 'lispyville-delete-line #'join-lines-after-delete))
+
+(after! magit
+  :config
+  (magit-auto-revert-mode))
+
+(smartparens-global-mode -1)
+(remove-hook 'prog-mode-hook #'git-gutter-mode)
+(remove-hook 'prog-mode-hook #'electric-layout-mode)
+(remove-hook 'prog-mode-hook #'electric-indent-mode)
+(remove-hook 'prog-mode-hook #'hl-todo-mode)
+(remove-hook 'prog-mode-hook #'highlight-numbers-mode)
+(remove-hook 'prog-mode-hook #'hl-line-mode)
+(remove-hook 'prog-mode-hook #'electric-pair-mode)
+(remove-hook 'prog-mode-hook #'display-line-numbers-mode)
+(remove-hook 'prog-mode-hook #'electric-quote-mode)
+(remove-hook 'prog-mode-hook #'goto-address-prog-mode)
 
 (after! projectile
-  (pushnew! projectile-project-root-files "project.clj" "build.boot" "deps.edn")
-  (add-to-list 'projectile-globally-ignored-directories "webapp/src/styles")
-  (add-to-list 'projectile-globally-ignored-directories "src/styles")
-  (add-to-list 'projectile-globally-ignored-directories "webapp/node_modules")
-  (add-to-list 'projectile-globally-ignored-directories "src/dist")
-  (add-to-list 'projectile-globally-ignored-directories "dist"))
+  (setq projectile-project-root-files-functions #'(projectile-root-top-down
+                                                   projectile-root-top-down-recurring
+                                                   projectile-root-bottom-up
+                                                   projectile-root-local)))
 
 (advice-add 'evil-window-up
             :after
             (lambda (arg)
               (when (string-equal " *NeoTree*" (buffer-name (current-buffer)))
                 (evil-window-right 1))))
-
-(after! aggressive-indent
-  (add-to-list 'aggressive-indent-excluded-modes 'typescript-mode))
 
 (setq-hook! typescript-mode
   typescript-indent-level 2)
@@ -297,20 +210,125 @@
 
 (after! prettier-js
   (add-hook 'before-save-hook
-            (lambda!
+            (cmd!
              (when prettier-js-mode
                (prettier-js)))))
 
 (setq-hook! web-mode
   web-mode-markup-indent-offset 2)
 
-(advice-remove 'evil-delete-backward-char-and-join #'+evil-delete-region-if-mark-a)
-
 (after! company
-  (setq company-idle-delay 0
-        company-echo-delay 0
-        company-tooltip-idle-delay 0)
+  (setq company-echo-delay 1
+        company-idle-delay 5
+        company-tooltip-idle-delay 0))
 
-  (define-key! company-active-map
-    "RET"       #'company-complete-selection
-    [return]    #'company-complete-selection))
+(after! evil
+  (advice-add 'evil-scroll-line-to-center :after #'recenter-and-blink)
+  (advice-add 'evil-backward-paragraph :after #'recenter-and-blink)
+  (advice-add 'evil-forward-paragraph :after #'recenter-and-blink)
+  (advice-add 'evil-ex-search-next :after #'recenter-and-blink)
+  (advice-add 'evil-ex-search-previous :after #'recenter-and-blink)
+  (advice-add 'evil-goto-line :after #'recenter-and-blink)
+
+  (map!
+   :map company-mode-map
+   "<tab>" #'+company/complete
+   :map evil-inner-text-objects-map
+   "b" #'evil-textobj-anyblock-inner-block
+   "B" #'evil-inner-paren
+   :map evil-outer-text-objects-map
+   "b" #'evil-textobj-anyblock-a-block
+   "B" #'evil-a-paren))
+
+(setq-hook! 'cider-mode-hook
+    read-process-output-max (* 128 1024)
+    gcmh-high-cons-threshold (* 2 gcmh-high-cons-threshold))
+
+(after! cider
+  (add-hook 'company-completion-started-hook 'ans/set-company-maps)
+  (add-hook 'company-completion-finished-hook 'ans/unset-company-maps)
+  (add-hook 'company-completion-cancelled-hook 'ans/unset-company-maps)
+
+  (remove-hook 'cider-mode-hook #'rainbow-delimiters-mode)
+  (remove-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
+
+  (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
+  (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)
+
+  (defun ans/unset-company-maps (&rest unused)
+    "Set default mappings (outside of company).
+    Arguments (UNUSED) are ignored."
+    (general-def
+      :states 'insert
+      :keymaps 'override
+      "<up>" nil
+      "<down>" nil
+      "C-j" nil
+      "C-k" nil
+      "RET" nil
+      "*" nil
+      [return] nil))
+
+  (defun ans/set-company-maps (&rest unused)
+    "Set maps for when you're inside company completion.
+    Arguments (UNUSED) are ignored."
+    (general-def
+      :states 'insert
+      :keymaps 'override
+      "<down>" 'company-select-next
+      "<up>" 'company-select-previous
+      "C-j" 'company-select-next
+      "C-k" 'company-select-previous
+      "RET" 'company-complete
+      "*" 'counsel-company
+      [return] 'company-complete))
+
+  (setq nrepl-log-messages t)
+  (map! :map cider-repl-mode-map
+        :ni "<down>" #'cider-repl-forward-input
+        :ni "<up>" #'cider-repl-backward-input)
+  (remove-hook 'cider-connected-hook #'+clojure--cider-dump-nrepl-server-log-h)
+  (add-hook 'cider-repl-mode-hook '(lambda () (setq scroll-conservatively 101))))
+
+(set-frame-parameter (selected-frame) 'alpha '(100 100))
+(add-to-list 'default-frame-alist '(alpha 100 100))
+
+(map! :n "C-l" #'+workspace/switch-right
+      :n "C-h" #'+workspace/switch-left)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values
+   '((eval progn
+           (defun alix-client/send-to-repl
+               (exp ns)
+             (nrepl-sync-request:eval exp
+                                      (or
+                                       (cider-current-connection)
+                                       (car
+                                        (cider-connections)))
+                                      ns))
+           (defun alix-client/reload nil
+             (interactive)
+             (alix-client/send-to-repl "(mount-root)" "analis-desktop.core"))
+           (defun alix-client/show-app-db nil
+             (interactive)
+             (alix-client/send-to-repl "(.log js/console @re-frame.db/app-db)" "analis-desktop.core"))
+           (defun alix-client/init nil
+             (interactive)
+             (alix-client/send-to-repl "(init)" "analis-desktop.core"))
+           (defun alix-client/clear nil
+             (interactive)
+             (alix-client/send-to-repl "(re-frame/clear-subscription-cache!)" "analis-desktop.core"))
+           (defun alix-client/send-to-core
+               (msg)
+             (interactive)
+             (alix-client/send-to-repl msg "analis-desktop.core"))))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

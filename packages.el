@@ -57,5 +57,12 @@
 
 (unpin! doom-themes)
 (unpin! lispy)
+(unpin! clj-refactor)
+
+(unpin! cider)
+(unpin! clojure-mode)
+(unpin! clj-refactor)
+
+;; (unpin! emacs-doom-themes)
 
 (package! prettier-js)
