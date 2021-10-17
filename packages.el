@@ -43,26 +43,37 @@
                                         ;(package! builtin-package :recipe (:branch "develop"))
 
 ;; editor features
-(package! super-save)
+;; (package! super-save)
 (package! hungry-delete)
 (package! centered-cursor-mode)
 (package! aggressive-indent)
 
-;; lisp specials
-(package! lispy)
-(package! lispyville)
-
-;; org things
-(package! git-auto-commit-mode)
-
 (unpin! doom-themes)
-(unpin! lispy)
-(unpin! clj-refactor)
 
 (unpin! cider)
 (unpin! clojure-mode)
 (unpin! clj-refactor)
+(unpin! doom-themes)
+(unpin! flycheck-clj-kondo)
+(unpin! company)
+(unpin! company-dict)
 
-;; (unpin! emacs-doom-themes)
+(package! selectrum)
+(package! consult)
+(package! mini-frame)
+(package! orderless)
+(package! flimenu)
 
-(package! prettier-js)
+(package! prescient)
+(package! selectrum-prescient)
+(package! amx)
+
+(package! highlight-indent-guides)
+
+(package! super-save)
+
+(package! marginalia)
+(package! embark)
+(package! embark-consult)
+
+(package! xref :pin "a82f459b37b31546bf274388baf8aca79e9c30d9")

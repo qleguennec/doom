@@ -6,8 +6,9 @@
 
 ;; These are used for a number of things, particularly for GPG configuration,
 ;; some email clients, file templates and snippets.
-(setq user-full-name "Quentin Le Guennec"
-      user-mail-address "quentin.leguennec1@gmail.com")
+(setq user-full-name "Quentin Le Guennec" user-mail-address "quentin.leguennec1@gmail.com")
+
+(setq doom-localleader-key "'")
 
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
@@ -19,21 +20,25 @@
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
 ;; test
-(setq doom-font (font-spec :family "mononoki" :size 15)
-      doom-big-font (font-spec :family "mononoki" :size 36)
-      doom-variable-pitch-font (font-spec :family "Overpass" :size 12))
+(setq doom-font
+      (font-spec :family "JetBrains Mono" :size 14)
+      doom-big-font
+      (font-spec :family "JetBrains Mono" :size 20)
+      doom-variable-pitch-font
+      (font-spec :family "Overpass" :size 12))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. These are the defaults.
-(setq doom-theme 'doom-material)
+(setq doom-theme 'doom-city-lights)
 
 ;; If you intend to use org, it is recommended you change this!
 (setq org-directory "~/org/")
 
 ;; If you want to change the style of line numbers, change this to `relative' or
 ;; `nil' to disable it:
-(setq display-line-numbers-type nil)
+(setq display-line-numbers-type 'relative)
+(setq-default truncate-lines t)
 
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
@@ -54,143 +59,83 @@
 ;;
 ;;
 ;;
+;;
 
-(remove-hook! prog-mode vi-tilde-fringe-mode)
+;; don't ask for risky variables in dir-locals
+(progn (advice-add 'risky-local-variable-p :override #'ignore)
+       (setq enable-local-variables t enable-local-eval t))
 
-(after! evil-collection
-  (setq evil-collection-mode-list
-        (delete 'lispy evil-collection-mode-list)))
+(after! evil-collection (setq evil-collection-mode-list (delete 'lispy evil-collection-mode-list)))
 
-(use-package super-save
-  :hook (prog-mode . super-save-mode))
+(use-package hungry-delete :hook (prog-mode . global-hungry-delete-mode))
 
-(use-package hungry-delete
-  :hook (prog-mode . global-hungry-delete-mode))
-
-(use-package aggressive-indent
+(use-package agressive-indent
   :hook ((clojure-mode clojurescript-mode emacs-lisp-mode) . aggressive-indent-mode))
-
-(use-package git-auto-commit-mode
-  :config
-  (setq gac-automatically-push-p t
-        gac-automatically-add-new-files-p t))
-
-;; Disable flycheck for emacs-lisp
-(add-hook! emacs-lisp-mode
-  (after! flycheck
-    (flycheck-mode -1)))
-
-(after! centaur-tabs
-  (setq centaur-tabs-cycle-scope 'tabs)
-  (map! :map centaur-tabs-mode-map
-        :n "M-h" #'centaur-tabs-backward
-        :n "M-l" #'centaur-tabs-forward)
-  (centaur-tabs-group-by-projectile-project))
-
-(after! neotree
-  (setq neo-autorefresh t))
 
 (add-hook! window-setup #'doom/quickload-session)
 (add-hook! kill-emacs #'doom/quicksave-session)
 
-(after! ivy
-  (map! :vn "?" #'+ivy/project-search
-        :vn "/" #'swiper
-        :vn "*" #'swiper-thing-at-point))
-
-
-(s-split " " "hello hello")
-(format ":%s %s" "hello" "hello")
-
-(after! window-select
-  (setq aw-keys '(?a ?s ?d ?f ?h ?j ?k ?l)
-        aw-dispatch-always t)
-  (map! :leader :n "ww" #'ace-window))
-
-(after! eshell
-  (map!
-   :map 'eshell-mode-map
-   :nvi "<up>" #'eshell-previous-input
-   :nvi "<down>" #'eshell-next-input))
-
 (after! magit
-  (map! :leader :n "ag" #'magit-status))
-
-(after! mu4e
-  (setq +mu4e-backend 'offlineimap)
-
-  (set-email-account! "perso"
-                      '((mu4e-sent-folder       . "/perso/sent")
-                        (mu4e-drafts-folder     . "/perso/dragts")
-                        (mu4e-trash-folder      . "/perso/trash")
-                        (mu4e-refile-folder     . "/perso/inbox")
-                        (smtpmail-smtp-user     . "quentin.leguennec1@gmail.com")
-                        (user-mail-address      . "quentin.leguennec1@gmail.com")
-                        (mu4e-compose-signature . "---\nQuentin Le Guennec"))
-                      t))
-
-(after! treemacs
-  (treemacs-follow-mode))
-
-(setq evil-vsplit-window-right t
-      evil-split-window-below t)
+  (map! :leader :n "ag" #'magit-status)
+  (magit-auto-revert-mode +1)
+  (global-auto-revert-mode +1)
+  (setq magit-git-global-arguments
+        '("--no-pager" "-c" "core.preloadindex=true" "-c" "log.showSignature=false" "-c" "color.ui=false" "-c" "color.diff=false"))
+  (map! :map magit-mode-map :n "RET" #'magit-diff-visit-worktree-file))
 
 (map! :leader :n "h." #'helpful-at-point)
 
-(setq scroll-conservatively 0
-      scroll-preserve-screen-position t)
+(map! :leader :n "o e" #'projectile-run-shell)
 
-(setq evil-escape-key-sequence nil)
+(setq evil-vsplit-window-right t evil-split-window-below t evil-escape-key-sequence nil)
 
-(defun recenter-and-blink (&rest _ignore)
-  (doom-recenter-a)
-  (+nav-flash-blink-cursor))
+(defun insert-random-uuid ()
+  "Insert a UUID.
+This commands calls “uuidgen” on MacOS, Linux, and calls PowelShell on Microsoft Windows.
+URL `http://ergoemacs.org/emacs/elisp_generate_uuid.html'
+Version 2020-06-04"
+  (interactive)
+  (let ((uuid (string-trim-right (shell-command-to-string "uuidgen"))))
+    (kill-new (concat ":" uuid))
+    (insert uuid)))
+
+(setq warning-suppress-types '((yasnippet backquote-change)))
+
+(defun recenter-and-blink (&rest _ignore) (doom-recenter-a) (+nav-flash-blink-cursor))
 
 (advice-add #'+lookup/definition :after #'recenter-and-blink)
 
-(defun join-lines-after-delete (&rest _ignore)
-  (interactive)
-  (delete-blank-lines))
+(defun join-lines-after-delete (&rest _ignore) (interactive) (delete-blank-lines))
 
 (after! lispy
-  :config
   (advice-add #'lispy-up :after #'doom-recenter-a)
   (advice-add #'lispy-down :after #'doom-recenter-a)
   (advice-add #'lispy-move-down :after #'doom-recenter-a)
   (advice-add #'lispy-move-up :after #'doom-recenter-a)
-
   (setq lispy-eval-display-style 'overlay)
-  (map! :map lispy-mode-map
-        :i "[" #'lispy-brackets
-        :i "{" #'lispy-braces))
+  (map! :map lispy-mode-map :i "[" #'lispy-brackets :i "{" #'lispy-braces))
 
-;; (after! lispyville
-;;   :config
-;;   (add-hook 'lispyville-delete #'join-lines-after-delete)
-;;   (add-hook 'lispyville-delete-whole-line #'join-lines-after-delete)
-;;   (add-hook 'lispyville-delete-line #'join-lines-after-delete))
-
-(after! magit
+(after! lispyville
   :config
-  (magit-auto-revert-mode))
-
-(smartparens-global-mode -1)
-(remove-hook 'prog-mode-hook #'git-gutter-mode)
-(remove-hook 'prog-mode-hook #'electric-layout-mode)
-(remove-hook 'prog-mode-hook #'electric-indent-mode)
-(remove-hook 'prog-mode-hook #'hl-todo-mode)
-(remove-hook 'prog-mode-hook #'highlight-numbers-mode)
-(remove-hook 'prog-mode-hook #'hl-line-mode)
-(remove-hook 'prog-mode-hook #'electric-pair-mode)
-(remove-hook 'prog-mode-hook #'display-line-numbers-mode)
-(remove-hook 'prog-mode-hook #'electric-quote-mode)
-(remove-hook 'prog-mode-hook #'goto-address-prog-mode)
+  (add-hook 'lispyville-delete #'join-lines-after-delete)
+  (add-hook 'lispyville-delete-whole-line #'join-lines-after-delete)
+  (add-hook 'lispyville-delete-line #'join-lines-after-delete))
 
 (after! projectile
-  (setq projectile-project-root-files-functions #'(projectile-root-top-down
-                                                   projectile-root-top-down-recurring
-                                                   projectile-root-bottom-up
-                                                   projectile-root-local)))
+  (setq projectile-project-name-function
+        (lambda (project-root)
+          (let ((project-root (projectile-project-root))
+                (wp-split (split-string project-root "wp/")))
+            (if (= 2 (length wp-split))
+                (replace-regexp-in-string "/$" "" (cadr wp-split))
+              (projectile-default-project-name project-root)))))
+  (setq projectile-use-git-grep t)
+  (setq projectile-enable-caching nil)
+  (setq projectile-indexing-method 'alien)
+  (setq projectile-project-root-functions
+        #'(projectile-root-top-down projectile-root-top-down-recurring
+                                    projectile-root-bottom-up
+                                    projectile-root-local)))
 
 (advice-add 'evil-window-up
             :after
@@ -198,137 +143,311 @@
               (when (string-equal " *NeoTree*" (buffer-name (current-buffer)))
                 (evil-window-right 1))))
 
-(setq-hook! typescript-mode
-  typescript-indent-level 2)
-
-(use-package prettier-js
-  :commands prettier-js-mode
-  :init
-  (add-hook! (typescript-mode web-mode scss-mode) #'prettier-js-mode)
-  :config
-  (setq prettier-js-command "prettier_d"))
-
-(after! prettier-js
-  (add-hook 'before-save-hook
-            (cmd!
-             (when prettier-js-mode
-               (prettier-js)))))
-
-(setq-hook! web-mode
-  web-mode-markup-indent-offset 2)
-
-(after! company
-  (setq company-echo-delay 1
-        company-idle-delay 5
-        company-tooltip-idle-delay 0))
+(after! flycheck :config (advice-add #'flycheck-next-error :after #'recenter-and-blink))
 
 (after! evil
+  (require 'evil-textobj-anyblock)
+  (evil-define-text-object my-evil-textobj-anyblock-inner-quote
+    (count &optional beg end type)
+    "Select the closest outer quote."
+    (let ((evil-textobj-anyblock-blocks
+           '(("'" . "'") ("\"" . "\"") ("`" . "`") ("“" . "”"))))
+      (evil-textobj-anyblock--make-textobj beg end type count nil)))
+  (evil-define-text-object my-evil-textobj-anyblock-a-quote
+    (count &optional beg end type)
+    "Select the closest outer quote."
+    (let ((evil-textobj-anyblock-blocks
+           '(("'" . "'") ("\"" . "\"") ("`" . "`") ("“" . "”"))))
+      (evil-textobj-anyblock--make-textobj beg end type count t)))
+  (define-key evil-inner-text-objects-map "q" 'my-evil-textobj-anyblock-inner-quote)
+  (define-key evil-outer-text-objects-map "q" 'my-evil-textobj-anyblock-a-quote)
   (advice-add 'evil-scroll-line-to-center :after #'recenter-and-blink)
   (advice-add 'evil-backward-paragraph :after #'recenter-and-blink)
   (advice-add 'evil-forward-paragraph :after #'recenter-and-blink)
   (advice-add 'evil-ex-search-next :after #'recenter-and-blink)
   (advice-add 'evil-ex-search-previous :after #'recenter-and-blink)
   (advice-add 'evil-goto-line :after #'recenter-and-blink)
+  (advice-add 'evil-goto-line :after #'recenter-and-blink)
+  (advice-add 'evil-forward-section-begin :after #'recenter-and-blink)
+  (advice-add 'evil-forward-section-end :after #'recenter-and-blink)
+  (advice-add 'evil-backward-section-begin :after #'recenter-and-blink)
+  (advice-add 'evil-backward-section-end :after #'recenter-and-blink)
+  (map! :n
+        "'"
+        #'evil-use-register
+        :n
+        "{"
+        #'evil-backward-section-begin
+        :n
+        "}"
+        #'evil-forward-section-begin
+        :nvi
+        "C-/"
+        #'evil-search-forward
+        :nvi
+        "C-j"
+        (cmd! () (save-excursion (evil-beginning-of-line)))))
 
-  (map!
-   :map company-mode-map
-   "<tab>" #'+company/complete
-   :map evil-inner-text-objects-map
-   "b" #'evil-textobj-anyblock-inner-block
-   "B" #'evil-inner-paren
-   :map evil-outer-text-objects-map
-   "b" #'evil-textobj-anyblock-a-block
-   "B" #'evil-a-paren))
+(after! evil-snipe :config (setq evil-snipe-scope 'whole-buffer))
 
-(setq-hook! 'cider-mode-hook
-    read-process-output-max (* 128 1024)
-    gcmh-high-cons-threshold (* 2 gcmh-high-cons-threshold))
+(after! lsp-mode
+  (remove-hook 'lsp-mode-hook #'lsp-ui-mode))
 
 (after! cider
-  (add-hook 'company-completion-started-hook 'ans/set-company-maps)
-  (add-hook 'company-completion-finished-hook 'ans/unset-company-maps)
-  (add-hook 'company-completion-cancelled-hook 'ans/unset-company-maps)
-
+  ;; (add-hook 'company-completion-started-hook 'ans/set-company-maps)
+  ;; (add-hook 'company-completion-finished-hook 'ans/unset-company-maps)
+  ;; (add-hook 'company-completion-cancelled-hook 'ans/unset-company-maps)
   (remove-hook 'cider-mode-hook #'rainbow-delimiters-mode)
   (remove-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
 
+  ;; (add-hook 'clojure-mode-hook #'lsp)
+  ;; (add-hook 'clojurescript-mode-hook #'lsp)
+
+  (setq cider-show-error-buffer nil)
+  (map! :map lsp-mode-map
+        :nv "gd" #'lsp-find-definition
+        :nv "C-/" #'lsp-find-references)
+
+  (defun clojure-before-save-hook (&rest _args)
+    (when (and (fboundp #'alix-controller/zprint-file)
+               (or
+                (equal major-mode 'clojure-mode)
+                (equal major-mode 'clojurescript-mode)))
+      ;; (alix-controller/zprint-file)
+      ))
+
+  (add-hook 'before-save-hook
+            #'clojure-before-save-hook)
+
+  (setq cljr-auto-clean-ns nil cljr-auto-sort-ns nil)
+  ;; (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
+  ;; (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)
+  (set-popup-rules! '(("^\\*cider-inspect" :vslot 2 :ttl nil :quit nil)
+                      ("^\\*cider-result*" :slot 1 :vslot 1 :quit nil :select t)))
+  ;; (remove-hook 'before-save-hook #'cider/indent-before-save)
+  (defun indent-after-paste
+      (&rest _ignore)
+    (call-interactively #'+evil/reselect-paste)
+    (call-interactively #'evil-indent-line)
+    (call-interactively #'evil-indent)
+    (call-interactively #'evil-first-non-blank)
+    (when cider-mode (call-interactively #'clojure-align)))
+  (advice-add 'evil-paste-after :after #'indent-after-paste)
+  (advice-add 'evil-paste-before :after #'indent-after-paste)
+  (setq cider-font-lock-reader-conditionals
+        nil
+        cider-font-lock-dynamically
+        '(macro core)
+        cider-inspector-auto-select-buffer
+        nil
+        cider-save-file-on-load
+        t
+        cider-prompt-for-symbol
+        nil)
   (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
   (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)
-
-  (defun ans/unset-company-maps (&rest unused)
+  (defun ans/unset-company-maps
+      (&rest unused)
     "Set default mappings (outside of company).
     Arguments (UNUSED) are ignored."
-    (general-def
-      :states 'insert
-      :keymaps 'override
-      "<up>" nil
-      "<down>" nil
-      "C-j" nil
-      "C-k" nil
-      "RET" nil
-      "*" nil
-      [return] nil))
+    (general-def :states
+      'insert
+      :keymaps
+      'override
+      "<up>"
+      nil
+      "<down>"
+      nil
+      "C-j"
+      nil
+      "C-k"
+      nil
+      "RET"
+      nil
+      "*"
+      nil
+      [return]
+      nil))
 
-  (defun ans/set-company-maps (&rest unused)
+  (defun ans/set-company-maps
+      (&rest unused)
     "Set maps for when you're inside company completion.
     Arguments (UNUSED) are ignored."
-    (general-def
-      :states 'insert
-      :keymaps 'override
-      "<down>" 'company-select-next
-      "<up>" 'company-select-previous
-      "C-j" 'company-select-next
-      "C-k" 'company-select-previous
-      "RET" 'company-complete
-      "*" 'counsel-company
-      [return] 'company-complete))
-
+    (general-def :states
+      'insert
+      :keymaps
+      'override
+      "<down>"
+      'company-select-next
+      "<up>"
+      'company-select-previous
+      "C-j"
+      'company-select-next
+      "C-k"
+      'company-select-previous
+      "RET"
+      'company-complete
+      "*"
+      'counsel-company
+      [return]
+      'company-complete))
   (setq nrepl-log-messages t)
-  (map! :map cider-repl-mode-map
-        :ni "<down>" #'cider-repl-forward-input
-        :ni "<up>" #'cider-repl-backward-input)
+  (map! :map
+        cider-repl-mode-map
+        :ni
+        "<down>"
+        #'cider-repl-forward-input
+        :ni
+        "<up>"
+        #'cider-repl-backward-input)
+  (map! :map cider-inspector-mode-map :ni "<mouse-8>" #'cider-inspector-pop)
+  (map! :map cider-mode-map :localleader "e D" #'cider-debug-defun-at-point)
   (remove-hook 'cider-connected-hook #'+clojure--cider-dump-nrepl-server-log-h)
-  (add-hook 'cider-repl-mode-hook '(lambda () (setq scroll-conservatively 101))))
+  (add-hook 'cider-repl-mode-hook #'(lambda () (setq scroll-conservatively 101))))
 
-(set-frame-parameter (selected-frame) 'alpha '(100 100))
-(add-to-list 'default-frame-alist '(alpha 100 100))
+(set-frame-parameter (selected-frame) 'alpha '(90 90))
+(add-to-list 'default-frame-alist '(alpha 80 80))
 
-(map! :n "C-l" #'+workspace/switch-right
-      :n "C-h" #'+workspace/switch-left)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(safe-local-variable-values
-   '((eval progn
-           (defun alix-client/send-to-repl
-               (exp ns)
-             (nrepl-sync-request:eval exp
-                                      (or
-                                       (cider-current-connection)
-                                       (car
-                                        (cider-connections)))
-                                      ns))
-           (defun alix-client/reload nil
-             (interactive)
-             (alix-client/send-to-repl "(mount-root)" "analis-desktop.core"))
-           (defun alix-client/show-app-db nil
-             (interactive)
-             (alix-client/send-to-repl "(.log js/console @re-frame.db/app-db)" "analis-desktop.core"))
-           (defun alix-client/init nil
-             (interactive)
-             (alix-client/send-to-repl "(init)" "analis-desktop.core"))
-           (defun alix-client/clear nil
-             (interactive)
-             (alix-client/send-to-repl "(re-frame/clear-subscription-cache!)" "analis-desktop.core"))
-           (defun alix-client/send-to-core
-               (msg)
-             (interactive)
-             (alix-client/send-to-repl msg "analis-desktop.core"))))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; (map! :n "C-l" #'+workspace/switch-right :n "C-h" #'+workspace/switch-left)
+
+(map! :n "SPC w w" #'ace-window)
+(map! :map emacs-lisp-mode-map :localleader "e D" #'edebug-defun)
+
+(use-package
+  super-save
+  :config
+  (super-save-mode +1)
+  (setq super-save-exclude '(".clj" ".cljs"))
+  (defun save-user-repl
+      (&rest _args)
+    (when (or (string= "/home/void/wp/alix/v3-client/user_repl.cljs" buffer-file-name)
+              (string=
+               "/home/void/wp/alix/v3-controller/src/com/medelpharm/v3_controller/refacto.clj"
+               buffer-file-name))
+      (save-buffer)))
+  (mapc (lambda (command) (advice-add command :before #'save-user-repl)) super-save-triggers))
+
+(after! company :config (map! :map company-active-map "`" #'counsel-company))
+
+;; (use-package wgrep :config (setq wgrep-change-readonly-file t))
+
+(use-package marginalia
+  :config
+  (marginalia-mode +1)
+  (setq marginalia-annotators '(marginalia-annotators-heavy))
+  :bind
+  (:map minibuffer-local-map ("M-a" . marginalia-cycle)))
+
+(use-package embark
+  :bind   (("C-S-a" . embark-act) ;; pick some comfortable binding
+           ("C-h B" . embark-bindings) ;; alternative for `describe-bindings'
+           ("M-e" . embark-export))
+  :init
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package embark-consult
+  :after  (embark consult)
+  :demand t        ; only necessary if you have the hook below
+  ;; if you want to have consult previews as you move around an
+  ;; auto-updating embark collect buffer
+  :hook   (embark-collect-mode . embark-consult-preview-minor-mode))
+
+(use-package consult
+  :demand t
+  :init
+  ;; Optionally configure the register formatting. This improves the register
+  ;; preview for `consult-register', `consult-register-load',
+  ;; `consult-register-store' and the Emacs built-ins.
+  (setq register-preview-delay 0 register-preview-function #'consult-register-format)
+  ;; Optionally tweak the register preview window.
+  ;; This adds thin lines, sorting and hides the mode line of the window.
+  (advice-add #'register-preview :override #'consult-register-window)
+  :config
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref xref-show-definitions-function #'consult-xref)
+  (autoload 'projectile-project-root "projectile")
+  (setq consult-project-root-function #'projectile-project-root)
+  (setq consult-git-grep-command
+        (concat
+         "git --no-pager grep --null --color=always --extended-regexp   --line-number -I -e ARG OPTS"
+         " -- :!orientdb-community-importers-2.2.37"))
+  (map! :vn
+        "?"
+        #'consult-git-grep
+        :n
+        "/"
+        #'consult-line
+        :n
+        "SPC '"
+        #'selectrum-repeat
+        :leader
+        "i i"
+        #'consult-project-imenu
+        :leader
+        "i m"
+        #'consult-global-mark))
+
+(use-package selectrum
+  :demand t
+  :config
+  (selectrum-mode +1)
+  (selectrum-prescient-mode +1)
+  (prescient-persist-mode +1)
+  (setq selectrum-num-candidates-displayed 10)
+  (setq projectile-completion-system 'default)
+  (map! :map    selectrum-minibuffer-map
+        "S-SPC" #'selectrum-restrict-to-matches
+        "C-j"   #'selectrum-next-candidate
+        "C-k"   #'selectrum-previous-candidate
+        "<up>"  #'selectrum-select-from-history
+        "M-RET" #'selectrum-submit-exact-input)
+  (setq selectrum-refine-candidates-function #'orderless-filter)
+  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
+  (setq amx-backend 'selectrum))
+
+(use-package orderless
+  :init   (icomplete-mode)                ; optional but recommended!
+  :custom (completion-styles '(orderless)))
+
+(use-package flimenu :config (setq flimenu-ignore-modes-list '()) (flimenu-global-mode +1))
+
+(use-package amx :config (amx-mode +1))
+
+(defun qleguennec/put-file-name-on-clipboard ()
+  "Put the current file name on the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode) default-directory (buffer-file-name))))
+    (when filename
+      (with-temp-buffer (insert filename) (clipboard-kill-region (point-min) (point-max)))
+      (message filename))))
+
+(global-git-gutter-mode)
+
+(use-package kbd-mode
+  :load-path "~/.doom.d/local-packages/")
+
+(setq frame-title-format
+      '((:eval (+workspace-current-name)) " – %b"  " – Doom Emacs"))
+
+(defun qleguennec/cycle-themes ()
+  (interactive)
+  (let* ((sorted-themes (->> (custom-available-themes)
+                             (-filter (lambda (theme) (and (s-starts-with? "doom" (symbol-name theme))
+                                                           (not (s-ends-with? "light" (symbol-name theme))))))
+                             (-sort #'string< )))
+         (themes-from-current (-drop-while (lambda (theme) (not (eq doom-theme theme))) sorted-themes))
+         (next-theme (-> (append themes-from-current sorted-themes)
+                         (cadr))))
+    (message (symbol-name next-theme))
+    (load-theme next-theme t)))
+
+(map!
+ :leader
+ :nvi "h h" #'qleguennec/cycle-themes)
