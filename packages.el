@@ -52,7 +52,7 @@
 
 (unpin! cider)
 (unpin! clojure-mode)
-(unpin! clj-refactor)
+;; (unpin! clj-refactor)
 (unpin! doom-themes)
 (unpin! flycheck-clj-kondo)
 (unpin! company)

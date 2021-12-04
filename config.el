@@ -10,6 +10,8 @@
 
 (setq doom-localleader-key "'")
 
+;; (advice-add #'doom-load-session :ignore)
+
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
 ;;
@@ -21,23 +23,25 @@
 ;; font string. You generally only need these two:
 ;; test
 (setq doom-font
-      (font-spec :family "JetBrains Mono" :size 14)
+      (font-spec :family "JetBrains Mono Nerd Font" :size 12)
       doom-big-font
-      (font-spec :family "JetBrains Mono" :size 20)
+      (font-spec :family "JetBrainsMono Nerd Font" :size 22)
       doom-variable-pitch-font
       (font-spec :family "Overpass" :size 12))
+
+(advice-add 'doom/load-session :override #'ignore)
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. These are the defaults.
-(setq doom-theme 'doom-city-lights)
+(setq doom-theme 'doom-wilmersdorf)
 
 ;; If you intend to use org, it is recommended you change this!
 (setq org-directory "~/org/")
 
 ;; If you want to change the style of line numbers, change this to `relative' or
 ;; `nil' to disable it:
-(setq display-line-numbers-type 'relative)
+(setq display-line-numbers-type nil)
 (setq-default truncate-lines t)
 
 ;; Here are some additional functions/macros that could help you configure Doom:
@@ -72,8 +76,9 @@
 (use-package agressive-indent
   :hook ((clojure-mode clojurescript-mode emacs-lisp-mode) . aggressive-indent-mode))
 
-(add-hook! window-setup #'doom/quickload-session)
-(add-hook! kill-emacs #'doom/quicksave-session)
+;; deactived for now (dont need)
+;; (add-hook! window-setup #'doom/quickload-session)
+;; (add-hook! kill-emacs #'doom/quicksave-session)
 
 (after! magit
   (map! :leader :n "ag" #'magit-status)
@@ -81,11 +86,21 @@
   (global-auto-revert-mode +1)
   (setq magit-git-global-arguments
         '("--no-pager" "-c" "core.preloadindex=true" "-c" "log.showSignature=false" "-c" "color.ui=false" "-c" "color.diff=false"))
-  (map! :map magit-mode-map :n "RET" #'magit-diff-visit-worktree-file))
+  (magit-wip-mode +1)
+  (map! :map magit-mode-map :n "RET" #'magit-diff-visit-worktree-file)
+  (defun qleguennec/commit-to-wip ()
+    (interactive)
+    (magit-with-toplevel
+      (dolist (file (magit-unstaged-files))
+        (magit-stage-file file))
+      (magit-run-git "commit" (concat "--message=[wip " (format-time-string "%Y-%m-%d %H:%M") "]")))))
 
 (map! :leader :n "h." #'helpful-at-point)
 
 (map! :leader :n "o e" #'projectile-run-shell)
+
+(map! :n "gp" #'profiler-start
+      :n "gP" #'profiler-stop)
 
 (setq evil-vsplit-window-right t evil-split-window-below t evil-escape-key-sequence nil)
 
@@ -102,7 +117,6 @@ Version 2020-06-04"
 (setq warning-suppress-types '((yasnippet backquote-change)))
 
 (defun recenter-and-blink (&rest _ignore) (doom-recenter-a) (+nav-flash-blink-cursor))
-
 (advice-add #'+lookup/definition :after #'recenter-and-blink)
 
 (defun join-lines-after-delete (&rest _ignore) (interactive) (delete-blank-lines))
@@ -191,7 +205,12 @@ Version 2020-06-04"
 (after! evil-snipe :config (setq evil-snipe-scope 'whole-buffer))
 
 (after! lsp-mode
-  (remove-hook 'lsp-mode-hook #'lsp-ui-mode))
+  (remove-hook 'lsp-mode-hook #'lsp-ui-mode)
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\resources\\'")
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\target\\'")
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]\\node-modules\\'")
+  (map! :n
+        "C-/" #'lsp-find-references))
 
 (after! cider
   ;; (add-hook 'company-completion-started-hook 'ans/set-company-maps)
@@ -203,10 +222,27 @@ Version 2020-06-04"
   ;; (add-hook 'clojure-mode-hook #'lsp)
   ;; (add-hook 'clojurescript-mode-hook #'lsp)
 
+  (setq clojure-toplevel-inside-comment-form t)
   (setq cider-show-error-buffer nil)
   (map! :map lsp-mode-map
         :nv "gd" #'lsp-find-definition
         :nv "C-/" #'lsp-find-references)
+
+  (defun qleguennec/avoid-compiled (filename)
+    (if (s-matches? ".*/resources/public/cljs-out/dev.*" filename)
+        (s-replace "/resources/public/cljs-out/dev"
+                   "/src/cljs"
+                   filename)
+      filename))
+
+  ;; (defadvice! lsp-xrefs-no-compiled (oldfunc locations)
+  ;;   :around #'lsp--locations-to-xref-items
+  ;;   (let* ((uri (gethash "uri" locations)))
+  ;;     (remhash "uri" locations)
+  ;;     (puthash "uri" (qleguennec/avoid-compiled uri)
+  ;;              locations)
+  ;;     (funcall oldfunc locations)))
+  ;; (advice-remove 'lsp--locations-to-xref-items #'lsp-xrefs-no-compiled)
 
   (defun clojure-before-save-hook (&rest _args)
     (when (and (fboundp #'alix-controller/zprint-file)
@@ -302,16 +338,29 @@ Version 2020-06-04"
         #'cider-repl-backward-input)
   (map! :map cider-inspector-mode-map :ni "<mouse-8>" #'cider-inspector-pop)
   (map! :map cider-mode-map :localleader "e D" #'cider-debug-defun-at-point)
-  (remove-hook 'cider-connected-hook #'+clojure--cider-dump-nrepl-server-log-h)
-  (add-hook 'cider-repl-mode-hook #'(lambda () (setq scroll-conservatively 101))))
+  (remove-hook 'cider-connected-hook #'+clojure--cider-dump-nrepl-server-log-h))
 
-(set-frame-parameter (selected-frame) 'alpha '(90 90))
-(add-to-list 'default-frame-alist '(alpha 80 80))
+(defun qleguennec/set-frame-transparency (&optional frame)
+  (interactive)
+  (let ((frame (or frame (selected-frame))))
+    (set-frame-parameter frame 'alpha-background 60)))
+
+(dolist (frame (visible-frame-list))
+  (qleguennec/set-frame-transparency frame))
+
+(add-to-list 'after-make-frame-functions
+             #'qleguennec/set-frame-transparency)
 
 ;; (map! :n "C-l" #'+workspace/switch-right :n "C-h" #'+workspace/switch-left)
 
-(map! :n "SPC w w" #'ace-window)
 (map! :map emacs-lisp-mode-map :localleader "e D" #'edebug-defun)
+(map! :leader
+      :nv "w v" (lambda! ()
+                         (call-process "i3-msg" nil 0 nil "split" "h")
+                         (make-frame))
+      :nv "w s" (lambda! ()
+                    (call-process "i3-msg" nil 0 nil "split" "v")
+                    (make-frame)))
 
 (use-package
   super-save
@@ -327,7 +376,13 @@ Version 2020-06-04"
       (save-buffer)))
   (mapc (lambda (command) (advice-add command :before #'save-user-repl)) super-save-triggers))
 
-(after! company :config (map! :map company-active-map "`" #'counsel-company))
+(after! company
+  :config
+  (setq company-echo-last-msg 't)
+  (map!
+   :map company-active-map
+   "`"
+   #'counsel-company))
 
 ;; (use-package wgrep :config (setq wgrep-change-readonly-file t))
 
@@ -341,7 +396,7 @@ Version 2020-06-04"
 (use-package embark
   :bind   (("C-S-a" . embark-act) ;; pick some comfortable binding
            ("C-h B" . embark-bindings) ;; alternative for `describe-bindings'
-           ("M-e" . embark-export))
+           ("C-e" . embark-export))
   :init
   ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
@@ -371,7 +426,7 @@ Version 2020-06-04"
   (advice-add #'register-preview :override #'consult-register-window)
   :config
   ;; Use Consult to select xref locations with preview
-  (setq xref-show-xrefs-function #'consult-xref xref-show-definitions-function #'consult-xref)
+  (setq xref-show-xrefs-function #'xref--show-xref-buffer xref-show-definitions-function #'xref-show-definitions-buffer)
   (autoload 'projectile-project-root "projectile")
   (setq consult-project-root-function #'projectile-project-root)
   (setq consult-git-grep-command
@@ -388,11 +443,11 @@ Version 2020-06-04"
         "SPC '"
         #'selectrum-repeat
         :leader
-        "i i"
-        #'consult-project-imenu
-        :leader
         "i m"
-        #'consult-global-mark))
+        #'consult-global-mark
+        :leader
+        "i i"
+        #'consult-imenu-multi))
 
 (use-package selectrum
   :demand t
@@ -420,6 +475,13 @@ Version 2020-06-04"
 
 (use-package amx :config (amx-mode +1))
 
+(after! centaur-tabs
+  (centaur-tabs-group-by-projectile-project)
+  (map!
+   :map centaur-tabs-mode-map
+   "C-l" #'centaur-tabs-forward
+   "C-h" #'centaur-tabs-backward))
+
 (defun qleguennec/put-file-name-on-clipboard ()
   "Put the current file name on the clipboard."
   (interactive)
@@ -428,26 +490,98 @@ Version 2020-06-04"
       (with-temp-buffer (insert filename) (clipboard-kill-region (point-min) (point-max)))
       (message filename))))
 
-(global-git-gutter-mode)
-
 (use-package kbd-mode
   :load-path "~/.doom.d/local-packages/")
 
+(advice-add #'evil-next-line :after #'doom-recenter-a)
+(advice-add #'evil-previous-line :after #'doom-recenter-a)
+
 (setq frame-title-format
-      '((:eval (+workspace-current-name)) " – %b"  " – Doom Emacs"))
+      '((:eval (if (equal major-mode 'dired-mode)
+                   default-directory
+                 (buffer-file-name)))
+        " – Doom Emacs"))
 
 (defun qleguennec/cycle-themes ()
   (interactive)
   (let* ((sorted-themes (->> (custom-available-themes)
-                             (-filter (lambda (theme) (and (s-starts-with? "doom" (symbol-name theme))
-                                                           (not (s-ends-with? "light" (symbol-name theme))))))
+                             (-filter (lambda (theme)
+                                        (and (not (-contains?
+                                                   '(doom-tomorrow-day
+                                                     doom-flatwhite
+                                                     doom-homage-white)
+                                                   theme))
+                                             (let ((theme (symbol-name theme)))
+                                               (and (s-starts-with? "doom" theme)
+                                                    (not (s-ends-with? "light" theme)))))))
                              (-sort #'string< )))
          (themes-from-current (-drop-while (lambda (theme) (not (eq doom-theme theme))) sorted-themes))
-         (next-theme (-> (append themes-from-current sorted-themes)
-                         (cadr))))
+         (next-theme (cadr (append themes-from-current sorted-themes))))
     (message (symbol-name next-theme))
-    (load-theme next-theme t)))
+    (setq doom-theme next-theme)
+    (load-theme next-theme t)
+    (doom/reload-theme)))
+
+(defun qleguennec/toggle-transparency (&optional frame)
+  (interactive)
+  (let* ((frame (or frame (selected-frame)))
+         (alpha (frame-parameter frame 'alpha)))
+    (set-frame-parameter
+     frame 'alpha
+     (if (eql (cond ((numberp alpha) alpha)
+                    ((numberp (cdr alpha)) (cdr alpha))
+                    ;; Also handle undocumented (<active> <inactive>) form.
+                    ((numberp (cadr alpha)) (cadr alpha)))
+              100)
+         '(85 . 50) '(100 . 100)))))
 
 (map!
  :leader
  :nvi "h h" #'qleguennec/cycle-themes)
+
+(defun qleguennec/prettier-parens:fontify-search (limit)
+  (let ((result nil)
+        (finish nil)
+        (bound (+ (point) limit)))
+    (while (not finish)
+      (if (re-search-forward "\\s)" bound t)
+          (when (and (= 0 (string-match-p "\\s)*$" (buffer-substring-no-properties (point) (line-end-position))))
+                     (not (eq (char-before (1- (point))) 92)))
+            (setq result (match-data)
+                  finish t))
+        (setq finish t)))
+    result))
+
+(defface qleguennec/prettier-parens:dim-paren-face
+  '((((class color) (background dark))
+     (:foreground "grey30"))
+    (((class color) (background light))
+     (:foreground "grey60")))
+  "Prettier parens"
+  :group 'prettier-parens)
+
+
+(define-minor-mode prettier-parens-mode
+  "Prettier parens mode."
+  :init-value nil
+  (if prettier-parens-mode
+      (progn (rainbow-delimiters-mode-disable)
+             (font-lock-add-keywords
+              nil '((qleguennec/prettier-parens:fontify-search . 'qleguennec/prettier-parens:dim-paren-face)))
+             (if (fboundp 'font-lock-flush)
+                 (font-lock-flush)
+               (when font-lock-mode
+                 (with-no-warnings
+                   (font-lock-fontify-buffer)))))
+    (progn
+      (font-lock-remove-keywords nil
+                                 '((qleguennec/prettier-parens:fontify-search . 'qleguennec/prettier-parens:dim-paren-face)))
+      (if (fboundp 'font-lock-flush)
+          (font-lock-flush)
+        (when font-lock-mode
+          (with-no-warnings
+            (font-lock-fontify-buffer)))))))
+
+(add-hook! '(clojure-mode-hook clojurescript-mode-hook emacs-lisp-mode-hook)
+  (defun enable-lisp-modes (&rest args)
+    (prettier-parens-mode)))

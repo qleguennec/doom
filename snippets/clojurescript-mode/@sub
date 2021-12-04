@@ -3,4 +3,4 @@
 # key: @sub
 # --
 
-@(re-frame/subscribe [$0])
+@(subscribe [$0])

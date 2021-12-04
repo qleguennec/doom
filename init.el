@@ -32,16 +32,17 @@
        :ui
        ;;deft              ; notational velocity for Emacs
        doom                ; what makes DOOM look the way it does
-       ;;doom-dashboard    ; a nifty splash screen for Emacs
+       doom-dashboard    ; a nifty splash screen for Emacs
        doom-quit              ; DOOM quit-message prompts when you quit Emacs
        ;;fill-column       ; a `fill-column' indicator
        hl-todo                ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
        ;;hydra
-       indent-guides     ; highlighted indent columns
-       modeline                   ; snazzy, Atom-inspired modeline, plus API
+       ;; indent-guides     ; highlighted indent columns
+       modeline
+                                        ; snazzy, Atom-inspired modeline, plus API
        nav-flash                  ; blink the current line after jumping
-       neotree                    ; a project drawer, like NERDTree for vim
-       ;; ophints
+       ;; neotree                    ; a project drawer, like NERDTree for vim
+       ophints
                                         ; highlight the region an operation acts on
        (popup                     ; tame sudden yet inevitable temporary windows
         +all                      ; catch all popups that start with an asterix
@@ -52,7 +53,7 @@
                                         ; a project drawer, like neotree but cooler
        ;;unicode           ; extended unicode support for various languages
        vc-gutter                        ; vcs diff in the fringe
-       vi-tilde-fringe                  ; fringe tildes to mark beyond EOB
+       ;; vi-tilde-fringe                  ; fringe tildes to mark beyond EOB
        window-select                    ; visually switch windows
        ;; workspaces        ; tab emulation, persistence & separate workspaces
        ;; zen
@@ -61,12 +62,12 @@
        :editor
        (evil +everywhere)               ; come to the dark side, we have cookies
        file-templates                   ; auto-snippets for empty files
-       fold                             ; (nigh) universal code folding
+       ;; fold                             ; (nigh) universal code folding
        ;; (format +onsave)
                                         ; automated prettiness
        ;;god               ; run Emacs commands without modifier keys
        lispy                       ; vim for lisp, for people who don't like vim
-       ;; multiple-cursors
+       multiple-cursors
                                         ; editing in many places at once
        ;; objed             ; text object editing for the innocent
        ;; ^
@@ -81,11 +82,11 @@
        (dired
         +icons)                   ; making dired pretty [functional]
        ;; electric                   ; smarter, keyword-based electric-indent
-       ibuffer                    ; interactive buffer management
+       ;; ibuffer                    ; interactive buffer management
        vc                         ; version-control and Emacs, sitting in a tree
 
        :term
-       eshell                   ; a consistent, cross-platform shell (WIP)
+       ;; eshell                   ; a consistent, cross-platform shell (WIP)
        ;;shell             ; a terminal REPL for Emacs
        ;; term              ; terminals in Emacs
        ;; vterm
@@ -108,7 +109,7 @@
        ;;gist              ; interacting with github gists
        (lookup                  ; helps you navigate your code and documentation
         +docsets)               ; ...or in Dash docsets locally
-       ;; lsp
+       lsp
        ;;macos             ; MacOS-specific commands
        magit                    ; a git porcelain for Emacs
        ;;make              ; run make tasks from Emacs
@@ -123,9 +124,9 @@
        :lang
        ;;agda              ; types of types of types of types...
        ;;assembly          ; assembly for fun or debugging
-       cc                               ; C/C++/Obj-C madness
-       ;; (clojure +lsp)
-       clojure
+       ;; cc                               ; C/C++/Obj-C madness
+       (clojure +lsp)
+       ;; clojure
                                         ; java with a lisp
        ;;common-lisp       ; if you've seen one lisp, you've seen them all
        ;;coq               ; proofs-as-programs
@@ -186,7 +187,7 @@
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
-       web                              ; the tubes
+       ;; web                              ; the tubes
 
        :email
        ;;mu4e
