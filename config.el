@@ -343,7 +343,7 @@ Version 2020-06-04"
 (defun qleguennec/set-frame-transparency (&optional frame)
   (interactive)
   (let ((frame (or frame (selected-frame))))
-    (set-frame-parameter frame 'alpha-background 60)))
+    (set-frame-parameter frame 'alpha-background 80)))
 
 (dolist (frame (visible-frame-list))
   (qleguennec/set-frame-transparency frame))
